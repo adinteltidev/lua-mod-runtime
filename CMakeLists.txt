@@ -16,4 +16,16 @@ target_link_libraries(lua-mod-run PRIVATE lua_mod_runtime)
 include(CTest)
 if(BUILD_TESTING)
   add_test(NAME example COMMAND lua-mod-run "${CMAKE_CURRENT_SOURCE_DIR}/examples/basic.lua")
+  add_test(NAME script_error COMMAND ${CMAKE_COMMAND}
+    "-DRUNNER=$<TARGET_FILE:lua-mod-run>"
+    "-DSCRIPT_PATH=${CMAKE_CURRENT_BINARY_DIR}/script-error.lua"
+    [=[-DSCRIPT=error("intentional test failure")]=]
+    "-DEXPECTED_ERROR=intentional test failure"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_cli.cmake")
+  add_test(NAME execution_limit COMMAND ${CMAKE_COMMAND}
+    "-DRUNNER=$<TARGET_FILE:lua-mod-run>"
+    "-DSCRIPT_PATH=${CMAKE_CURRENT_BINARY_DIR}/execution-limit.lua"
+    "-DSCRIPT=while true do end"
+    "-DEXPECTED_ERROR=exceeded the (instruction|time) limit"
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_cli.cmake")
 endif()
